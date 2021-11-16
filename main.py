@@ -10,19 +10,24 @@ def read_message(offset):
     }
     res = requests.get(api+"/getUpdates", data=data)
     data = res.json()
+    print(data)
 
-    for result in data["result"]:
-        chat_id = result["message"]["chat"]["id"]
-        message = result["message"]["text"]     # Message from user
-        message_id = result["message"]["message_id"]
+    try:
+        for result in data["result"]:
 
-        if "/ss" in message:
-            link = message.replace("/ss","")
-            ss(chat_id, link)
+            chat_id = result["message"]["chat"]["id"]
+            message = result["message"]["text"]     # Message from user
+            message_id = result["message"]["message_id"]
 
-        else:
-            text, is_tag_user = bot_ai(message)
-            send_message(chat_id, message_id, text, is_tag_user)
+            if "/ss" in message:
+                link = message.replace("/ss","")
+                ss(chat_id, link)
+
+            else:
+                text, is_tag_user = bot_ai(message)
+                send_message(chat_id, message_id, text, is_tag_user)
+    except:
+        pass
 
     if data["result"]:
         updated_id = data['result'][-1]["update_id"]+1
