@@ -1,4 +1,5 @@
 import requests
+import re
 from bot_ai import *
 
 api = 'https://api.telegram.org/bot2070925065:AAGEyOVjNlAOfuZ6E4C2Xa4_56wPQ_GeZdo'
@@ -19,13 +20,19 @@ def read_message(offset):
             message = result["message"]["text"]     # Message from user
             message_id = result["message"]["message_id"]
 
-            if "/ss" in message:
-                link = message.replace("/ss","")
-                ss(chat_id, link)
+            url, is_urlfound = find(message)
 
+            if is_urlfound == "y":
+                link = make_url(url)
+                ss(chat_id, message_id, link)
+            elif "/help" == message:
+                help = "Send me any valid link to get webcapture..[to take screenshot]\nFor any problem contact with owner..\nOwner: @jabir52"
+                send_message(chat_id, message_id, help, "y")
+            elif "/start" == message:
+                start = "Welcome!\nLet's get start... \n\nowener: @jabir52"
+                send_message(chat_id, message_id, start, "y")
             else:
-                text, is_tag_user = bot_ai(message)
-                send_message(chat_id, message_id, text, is_tag_user)
+                pass
     except:
         pass
 
@@ -50,11 +57,13 @@ def send_message(chat_id, message_id,  text, is_tag_user):
         requests.get(api + "/sendMessage", data=data1)
 
 
-def ss(chat_id, link):
+def ss(chat_id, message_id, link):
 
+    print(link)
     def capture():
         BASE = 'https://render-tron.appspot.com/screenshot/'
         url = link
+        print(link)
         path = 'ss.jpg'
         response = requests.get(BASE + url, stream=True)
         if response.status_code == 200:
@@ -65,11 +74,52 @@ def ss(chat_id, link):
 
     data1 = {
         "chat_id": chat_id,
+        "reply_to_message_id": message_id
 
     }
     files = {"photo": open("ss.jpg", "rb")}
 
     requests.post(api + "/sendPhoto", data=data1, files=files)
+
+def find(string):
+    regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+    url = re.findall(regex, string)
+    if len(url) != 0:
+        return [x[0] for x in url], "y"
+
+    else:
+        return [x[0] for x in url], "n"
+
+def make_url(url):
+
+    try:
+
+        for b in url:
+            n = url
+            try:
+                c = b.replace("https://", "http://")
+                n = b.replace("http://", "")
+            except:
+                pass
+            c =  n
+            print(c)
+            r = requests.get(c)
+            r = r.url
+            print(r[0:5])
+            if r[0:5] == "https":
+                url = n.replace(n[0:8], "https://")
+                print(url)
+                return url
+            elif r[0:5] != "https" and r[0:4] == "http":
+                url = n.replace(n[0:9], "http://")
+                print(url)
+                return url
+            else:
+                return "errora"
+                pass
+    except:
+        return "error"
+        pass
 
 offset = 0
 while True:
